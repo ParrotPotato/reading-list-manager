@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>{{template "head" .}}</head>
+<body>
+<header class="site-header">
+ <div class="header-inner">
+  <a class="brand" href="/">Catalogue</a>
+  <div class="signed-in">
+    <a class="who" href="/account">{{.User.Email}}</a>
+    <form action="/logout" method="post"><button type="submit">Sign out</button></form>
+  </div>
+ </div>
+</header>
+
+<main class="layout single">
+  <section class="content">
+    <p><a href="/">Back to the catalogue</a></p>
+
+    <div class="card stack">
+      <h1>Public lists</h1>
+      <p class="hint">Each list has its own link that anyone can open without signing in. It shows the list's title and, for each item on it, only the title, link, category and creator. Notes, status, stars, tags and your email stay private. Links are random, so they say nothing about who made them.</p>
+      <p class="hint">Put items on a list from their <em>Notes</em> panel.</p>
+      {{template "error" .Error}}
+      <form action="/lists" method="post" class="row">
+        <input type="text" name="title" placeholder="New list, e.g. Films worth watching" maxlength="100" required aria-label="List title" class="grow">
+        <button type="submit" class="primary">Create list</button>
+      </form>
+    </div>
+
+    {{range .Lists}}
+    <section class="card stack list-card" id="list-{{.ID}}">
+      <form action="/lists/{{.ID}}" method="post" class="stack">
+        <input type="text" name="title" value="{{.Title}}" maxlength="100" required aria-label="List title" class="list-title">
+        <label>Description <span class="hint">optional — shown under the title on the public page</span>
+          <textarea name="description" rows="5" maxlength="5000" placeholder="What is this list, and who is it for?">{{.Description}}</textarea>
+        </label>
+        <p class="hint md-help">Markdown: <code>**bold**</code> <code>*italic*</code> <code>[link](https://…)</code> <code>- list item</code> <code>## heading</code> <code>&gt; quote</code>, and a blank line between paragraphs. HTML is not allowed.</p>
+        <div class="row">
+          <button type="submit">Save</button>
+        </div>
+      </form>
+      {{if .Description}}
+      <details class="more">
+        <summary>Preview description</summary>
+        <div class="description">{{.DescriptionHTML}}</div>
+      </details>
+      {{end}}
+      <p class="meta">
+        <a href="/?list={{.ID}}">{{.Count}} item{{if ne .Count 1}}s{{end}}</a>
+        <span class="sep">·</span>
+        <span>{{if .ShareURL}}shared by link{{else}}not shared{{end}}</span>
+        <span class="sep">·</span>
+        <span>made {{date .CreatedAt}}</span>
+      </p>
+      {{if .ShareURL}}
+        <label>Link
+          <input type="text" value="{{.ShareURL}}" readonly onfocus="this.select()">
+        </label>
+        <div class="row">
+          <a class="button" href="{{.ShareURL}}" target="_blank" rel="noopener">Open it</a>
+          <form action="/lists/{{.ID}}/link" method="post">
+            <button type="submit" title="The current link stops working">Replace link</button>
+          </form>
+          <form action="/lists/{{.ID}}/link/delete" method="post">
+            <button type="submit" title="Keeps the list; nobody can open it until it gets a new link">Turn off link</button>
+          </form>
+        </div>
+      {{else}}
+        <div class="row">
+          <form action="/lists/{{.ID}}/link" method="post">
+            <button type="submit" class="primary">Create a link</button>
+          </form>
+        </div>
+      {{end}}
+      <details class="danger">
+        <summary>Delete this list</summary>
+        <p class="hint">Removes the list and its link. The items stay in your catalogue.</p>
+        <form action="/lists/{{.ID}}/delete" method="post">
+          <button type="submit" class="destructive">Yes, delete “{{.Title}}”</button>
+        </form>
+      </details>
+    </section>
+    {{else}}
+    <p class="empty">No lists yet. Make one above, then add items to it from their Notes panel.</p>
+    {{end}}
+  </section>
+</main>
+</body>
+</html>

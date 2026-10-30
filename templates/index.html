@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>{{template "head" .}}</head>
+<body{{if .Panel}} class="panel-open"{{end}}>
+<header class="site-header">
+ <div class="header-inner">
+  <a class="brand" href="/" data-swap>Catalogue</a>
+  <form class="search" action="/" method="get" role="search">
+    {{template "carry" .Filter}}
+    {{if not .Filter.SortIsDefault}}<input type="hidden" name="sort" value="{{.Filter.Sort}}">{{end}}
+    <input type="search" name="q" value="{{.Filter.Query}}" placeholder="Search titles, people, links and notes…" aria-label="Search">
+    <button type="submit">Search</button>
+  </form>
+  <div class="signed-in">
+    <a class="who" href="/lists">Lists</a>
+    <a class="who" href="/account">{{.User.Email}}</a>
+    <form action="/logout" method="post"><button type="submit">Sign out</button></form>
+  </div>
+ </div>
+</header>
+
+<div id="main">
+<main class="layout">
+  <section class="content">
+    {{if not .Panel}}{{template "error" .Error}}{{end}}
+
+    <details class="card add" {{if and .Error (not .Panel)}}open{{end}}>
+      <summary>Save something</summary>
+      <form action="/items" method="post" class="stack">
+        <input type="hidden" name="return" value="{{.Return}}">
+        <label>Link <span class="hint">optional — books and films often have none</span>
+          <input type="text" name="url" placeholder="https://example.com/a-great-post" autocomplete="off">
+        </label>
+        <label>Title <span class="hint">filled in from the link if you leave it blank</span>
+          <input type="text" name="title" autocomplete="off">
+        </label>
+        {{template "fields" .NewItem}}
+        <label>Tags <span class="hint">comma separated</span>
+          <input type="text" name="tags" placeholder="go, history, to-revisit" autocomplete="off" list="all-tags">
+        </label>
+        <label>Notes <span class="hint">optional — why you saved it</span>
+          <textarea name="notes" rows="3"></textarea>
+        </label>
+        <div class="row">
+          <button type="submit" class="primary">Save to catalogue</button>
+        </div>
+      </form>
+    </details>
+
+    <div class="list-head">
+      <h1>
+        {{if .Filter.Tag}}#{{.Filter.Tag}}
+        {{else if .Filter.Kind}}{{kindLabel .Filter.Kind}}
+        {{else if .Filter.Favorite}}Starred
+        {{else if .Filter.List}}{{.ListTitle .Filter.List}}
+        {{else if .Filter.Status}}{{statusLabel .Filter.Status}}
+        {{else if .Filter.Query}}Results
+        {{else}}Everything{{end}}
+      </h1>
+      <span class="count">{{len .Items}} item{{if ne (len .Items) 1}}s{{end}}</span>
+      {{if .Filter.Active}}<a class="clear" href="/" data-swap>Clear filters</a>{{end}}
+      <form class="sort" action="/" method="get">
+        {{template "carry" .Filter}}
+        {{if .Filter.Query}}<input type="hidden" name="q" value="{{.Filter.Query}}">{{end}}
+        <label class="inline">Sort
+          <select name="sort" data-autosubmit>
+            {{$current := .Filter.Sort}}
+            {{range sorts}}<option value="{{.Slug}}" {{if eq .Slug $current}}selected{{end}}>{{.Label}}</option>{{end}}
+          </select>
+        </label>
+        <noscript><button type="submit">Go</button></noscript>
+      </form>
+    </div>
+
+    {{if not .Items}}
+      <p class="empty">
+        {{if .Filter.Active}}Nothing matches this filter.{{else}}Nothing here yet — add the first thing you want to get to.{{end}}
+      </p>
+    {{end}}
+
+    <ul class="items">
+      {{range .Items}}
+      <li class="card item kind-{{.Kind}} {{if .Favorite}}starred{{end}} {{if and $.Panel (eq .ID $.Panel.ID)}}active{{end}}">
+        <div class="item-main">
+          <h2>
+            {{if .URL}}<a href="{{.URL}}" target="_blank" rel="noopener noreferrer">{{.Title}}</a>
+            {{else}}<a href="{{$.PanelLink .ID}}" data-swap>{{.Title}}</a>{{end}}
+          </h2>
+          {{template "meta" .}}
+          {{if .Notes}}<p class="excerpt">{{.Notes}}</p>{{end}}
+          {{template "tags" .Tags}}
+          {{template "listChips" .Lists}}
+        </div>
+        <div class="item-actions">
+          <a class="button notes-link" href="{{$.PanelLink .ID}}" data-swap>{{if .Notes}}Notes{{else}}Add notes{{end}}</a>
+          {{template "star" ($.Star .ID .Favorite)}}
+          <form action="/items/{{.ID}}/status" method="post" class="status-form">
+            <input type="hidden" name="return" value="{{$.Return}}">
+            <select name="status" data-autosubmit aria-label="Status">{{template "statusOptions" .Status}}</select>
+            <noscript><button type="submit">Set</button></noscript>
+          </form>
+        </div>
+      </li>
+      {{end}}
+    </ul>
+  </section>
+
+  <aside class="sidebar">
+    <nav class="card">
+      <h3>Queue</h3>
+      <ul class="filters">
+        <li><a href="/" class="{{if not .Filter.Active}}on{{end}}" data-swap>Everything <span>{{.Counts.Total}}</span></a></li>
+        {{range statuses}}
+        <li><a href="/?status={{.Slug}}" class="{{if eq .Slug $.Filter.Status}}on{{end}}" data-swap>{{.Label}} <span>{{index $.Counts.Statuses .Slug}}</span></a></li>
+        {{end}}
+        <li><a href="/?favorite=1" class="{{if .Filter.Favorite}}on{{end}}" data-swap>Starred <span>{{.Counts.Favorites}}</span></a></li>
+      </ul>
+    </nav>
+
+    <nav class="card">
+      <h3>Categories</h3>
+      <ul class="filters">
+        {{range kinds}}
+        {{if index $.Counts.Kinds .Slug}}
+        <li><a href="/?kind={{.Slug}}" class="{{if eq .Slug $.Filter.Kind}}on{{end}}" data-swap>{{.Label}} <span>{{index $.Counts.Kinds .Slug}}</span></a></li>
+        {{end}}
+        {{end}}
+        {{if not .Counts.Total}}<li><p class="hint">Categories appear here once you save something.</p></li>{{end}}
+      </ul>
+    </nav>
+
+    <nav class="card">
+      <h3>Public lists</h3>
+      {{if .Lists}}
+        <ul class="filters">
+          {{range .Lists}}
+          <li><a href="/?list={{.ID}}" class="{{if eq .ID $.Filter.List}}on{{end}}" data-swap>{{.Title}} <span>{{.Count}}</span></a></li>
+          {{end}}
+        </ul>
+        <p class="hint side-note"><a href="/lists">Links and settings</a></p>
+      {{else}}
+        <p class="hint">Share a selection with anyone, no sign-in needed. <a href="/lists">Make a list</a></p>
+      {{end}}
+    </nav>
+
+    <nav class="card">
+      <h3>Tags</h3>
+      {{if .Tags}}
+        <ul class="filters">
+          {{range .Tags}}
+          <li><a href="/?tag={{.Name}}" class="{{if eq .Name $.Filter.Tag}}on{{end}}" data-swap>{{.Name}} <span>{{.Count}}</span></a></li>
+          {{end}}
+        </ul>
+      {{else}}
+        <p class="hint">Tags you add will show up here.</p>
+      {{end}}
+    </nav>
+  </aside>
+</main>
+</div>
+
+<div id="panel-host">{{template "panel" .}}</div>
+
+<datalist id="all-tags">{{range .Tags}}<option value="{{.Name}}">{{end}}</datalist>
+<script src="/static/app.js" defer></script>
+</body>
+</html>

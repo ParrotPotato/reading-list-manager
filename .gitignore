@@ -1,0 +1,10 @@
+# SQLite database and its write-ahead log
+*.db
+*.db-wal
+*.db-shm
+
+# Built binary
+/reading-list-manager
+
+# Per-machine Compose settings
+.env

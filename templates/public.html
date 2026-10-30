@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+{{template "head" .}}
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+</head>
+<body>
+<main class="layout single public">
+  <section class="content">
+    <header class="public-head">
+      <h1>{{.Title}}</h1>
+      {{if .Description}}<div class="description">{{.Description}}</div>{{end}}
+      <p class="count">{{len .Items}} item{{if ne (len .Items) 1}}s{{end}}</p>
+    </header>
+
+    {{if not .Items}}
+      <p class="empty">Nothing has been shared on this list yet.</p>
+    {{end}}
+
+    <ul class="items">
+      {{range .Items}}
+      <li class="card item kind-{{.Kind}}">
+        <div class="item-main">
+          <h2>{{if .URL}}<a href="{{.URL}}" target="_blank" rel="noopener noreferrer">{{.Title}}</a>{{else}}{{.Title}}{{end}}</h2>
+          <p class="meta">
+            <span class="kind">{{.KindLabel}}</span>
+            {{if .Creator}}<span class="sep">·</span><span class="creator">{{.Creator}}</span>{{end}}
+            {{if .Host}}<span class="sep">·</span><span>{{.Host}}</span>{{end}}
+          </p>
+        </div>
+      </li>
+      {{end}}
+    </ul>
+  </section>
+</main>
+</body>
+</html>

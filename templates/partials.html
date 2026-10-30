@@ -1,0 +1,84 @@
+{{define "head"}}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.Title}} · Catalogue</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='3' fill='%239a4b2f'/><rect x='4' y='4' width='8' height='1.6' fill='white'/><rect x='4' y='7.2' width='8' height='1.6' fill='white'/><rect x='4' y='10.4' width='5' height='1.6' fill='white'/></svg>">
+{{end}}
+
+{{define "error"}}
+{{if .}}<p class="error" role="alert">{{.}}</p>{{end}}
+{{end}}
+
+{{define "tags"}}
+{{if .}}<ul class="tags">{{range .}}<li><a href="/?tag={{.}}" data-swap>{{.}}</a></li>{{end}}</ul>{{end}}
+{{end}}
+
+{{/* "meta" is the one-line summary shown above an item, in the list and the panel. */}}
+{{define "meta"}}
+<p class="meta">
+  <span class="badge badge-{{.Status}}">{{.StatusLabel}}</span>
+  <a class="kind" href="/?kind={{.Kind}}" data-swap>{{.KindLabel}}</a>
+  {{if .Creator}}<span class="sep">·</span><span class="creator">{{.Creator}}</span>{{end}}
+  {{if .Host}}<span class="sep">·</span><span>{{.Host}}</span>{{end}}
+  <span class="sep">·</span>
+  <span title="{{date .CreatedAt}}">saved {{since .CreatedAt}}</span>
+</p>
+{{end}}
+
+{{/* "statusOptions" fills a status <select>; the dot is the selected slug. */}}
+{{define "statusOptions"}}
+{{$selected := .}}
+{{range statuses}}<option value="{{.Slug}}" {{if eq .Slug $selected}}selected{{end}}>{{.Label}}</option>{{end}}
+{{end}}
+
+{{/* "star" is the favourite toggle, shown on every row and in the panel. */}}
+{{define "star"}}
+<form action="/items/{{.ID}}/favorite" method="post">
+  <input type="hidden" name="return" value="{{.Return}}">
+  <button type="submit" class="star-toggle {{if .Favorite}}on{{end}}">{{if .Favorite}}Starred{{else}}Star{{end}}</button>
+</form>
+{{end}}
+
+{{/* "listToggle" puts an item on one public list, or takes it off. */}}
+{{define "listToggle"}}
+<form action="/items/{{.ItemID}}/lists/{{.List.ID}}" method="post">
+  <input type="hidden" name="return" value="{{.Return}}">
+  <button type="submit" class="list-toggle {{if .On}}on{{end}}" aria-pressed="{{if .On}}true{{else}}false{{end}}"
+    title="{{if .On}}On “{{.List.Title}}” — click to take it off{{else}}Add to “{{.List.Title}}”{{end}}">{{.List.Title}}</button>
+</form>
+{{end}}
+
+{{/* "listChips" shows which public lists an item is on. */}}
+{{define "listChips"}}
+{{if .}}<ul class="tags list-chips">{{range .}}<li><a href="/?list={{.ID}}" data-swap title="On the public list “{{.Title}}”">{{.Title}}</a></li>{{end}}</ul>{{end}}
+{{end}}
+
+{{/* "fields" is the shared set of item inputs, used by both the add form and
+     the panel. The dot is the item being edited, or a blank one when adding. */}}
+{{define "fields"}}
+<div class="grid-2">
+  <label>Category
+    <select name="kind" data-kind>
+      {{$kind := .Kind}}
+      {{range kinds}}<option value="{{.Slug}}" data-creator="{{.Creator}}" {{if eq .Slug $kind}}selected{{end}}>{{.Label}}</option>{{end}}
+    </select>
+  </label>
+  <label>Status
+    <select name="status">{{template "statusOptions" .Status}}</select>
+  </label>
+</div>
+<label><span data-creator-label>{{.CreatorLabel}}</span> <span class="hint">optional</span>
+  <input type="text" name="creator" value="{{.Creator}}" autocomplete="off">
+</label>
+{{end}}
+
+{{/* "carry" re-submits the active filters as hidden inputs, so searching or
+     re-sorting does not silently drop the view you are looking at. */}}
+{{define "carry"}}
+{{if .Tag}}<input type="hidden" name="tag" value="{{.Tag}}">{{end}}
+{{if .Kind}}<input type="hidden" name="kind" value="{{.Kind}}">{{end}}
+{{if .Status}}<input type="hidden" name="status" value="{{.Status}}">{{end}}
+{{if .Favorite}}<input type="hidden" name="favorite" value="1">{{end}}
+{{if .List}}<input type="hidden" name="list" value="{{.List}}">{{end}}
+{{end}}

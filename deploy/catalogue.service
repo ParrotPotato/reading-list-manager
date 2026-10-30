@@ -1,0 +1,58 @@
+# Catalogue, run by systemd so it survives reboots and crashes.
+#
+# Install:
+#   sudo cp deploy/catalogue.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now catalogue
+#
+# The paths below assume the binary and database live in the checkout at
+# /home/nitesh/reading-list-manager. Change User= and the two paths if not.
+
+[Unit]
+Description=Catalogue — personal reading and watching list
+# network-online means "an address is configured", which is what a listener
+# needs; plain network.target only means "networking is starting".
+Wants=network-online.target
+After=network-online.target
+# Do not give up if it crash-loops; a database locked by a backup should not
+# take the service down permanently. (This key lives in [Unit] on systemd 229+.)
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=nitesh
+Group=nitesh
+WorkingDirectory=/home/nitesh/reading-list-manager
+
+# Bind to loopback: Caddy reverse-proxies to it, so it never needs a public
+# interface of its own. An absolute -db path means the service does not depend
+# on the working directory being right.
+ExecStart=/home/nitesh/reading-list-manager/catalogue \
+    -addr 127.0.0.1:8080 \
+    -db /home/nitesh/reading-list-manager/reading-list.db
+
+# Come back from a crash, and from anything that kills it.
+Restart=always
+RestartSec=2s
+TimeoutStopSec=20s
+
+# Logs go to the journal: journalctl -u catalogue -f
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=catalogue
+
+# Modest hardening. ProtectHome stays off because the database lives under
+# /home; move both to /var/lib/catalogue to turn it on.
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=full
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

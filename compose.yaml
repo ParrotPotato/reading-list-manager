@@ -1,0 +1,17 @@
+services:
+  catalogue:
+    build: .
+    image: catalogue
+    # Starts at boot and comes back from a crash, as the systemd unit did.
+    restart: unless-stopped
+    # Run as whoever owns ./sqlite, or on Linux SQLite cannot write there. 1000
+    # is the first account on Ubuntu; if `id` says otherwise, set these in .env.
+    user: "${CATALOGUE_UID:-1000}:${CATALOGUE_GID:-1000}"
+    ports:
+      # Loopback only, for Caddy. Docker's published ports go around ufw, so a
+      # bare "8080:8080" would put the app on the public internet.
+      - "127.0.0.1:8080:8080"
+    volumes:
+      # The folder, not the file: WAL mode keeps -wal and -shm files beside the
+      # database, and they have to persist along with it.
+      - ./sqlite:/data

@@ -1,0 +1,82 @@
+{{define "panel"}}
+{{with .Panel}}
+<a class="panel-scrim" href="{{$.ListReturn}}" data-swap aria-label="Close panel"></a>
+<aside class="panel" role="dialog" aria-modal="true" aria-labelledby="panel-title" data-panel-id="{{.ID}}">
+  <header class="panel-head">
+    {{template "meta" .}}
+    <a class="button panel-close" href="{{$.ListReturn}}" data-swap title="Close (Esc)">Close</a>
+  </header>
+
+  <div class="panel-body">
+    {{template "error" $.Error}}
+    <h2 id="panel-title">{{.Title}}</h2>
+    {{if .URL}}
+    <p class="url"><a href="{{.URL}}" target="_blank" rel="noopener noreferrer">Open it</a><span class="sep">·</span><span class="dim">{{.URL}}</span></p>
+    {{end}}
+
+    <div class="quick">
+      {{template "star" ($.Star .ID .Favorite)}}
+      {{$current := .Status}}
+      {{range statuses}}
+      {{if ne .Slug $current}}
+      <form action="/items/{{$.Panel.ID}}/status" method="post">
+        <input type="hidden" name="return" value="{{$.Return}}">
+        <input type="hidden" name="status" value="{{.Slug}}">
+        <button type="submit">{{.Label}}</button>
+      </form>
+      {{end}}
+      {{end}}
+    </div>
+
+    <section class="panel-lists">
+      <h3>Public lists</h3>
+      {{if $.Lists}}
+        <div class="quick">
+          {{range $.Lists}}{{template "listToggle" ($.ListToggle $.Panel .)}}{{end}}
+        </div>
+        <p class="hint">Only the title, link, category and {{lower .CreatorLabel}} are shown there. <a href="/lists">Manage lists</a></p>
+      {{else}}
+        <p class="hint">Want to show this to someone? <a href="/lists">Make a public list</a>, then add it here.</p>
+      {{end}}
+    </section>
+
+    <form class="stack panel-form" action="/items/{{.ID}}" method="post">
+      <input type="hidden" name="return" value="{{$.Return}}">
+      <label for="notes">Notes</label>
+      <textarea id="notes" name="notes" rows="12" placeholder="What stood out? Quotes, takeaways, things to follow up on…">{{.Notes}}</textarea>
+
+      <label>Tags <span class="hint">comma separated</span>
+        <input type="text" name="tags" value="{{.TagLine}}" list="all-tags" autocomplete="off">
+      </label>
+
+      <details class="more">
+        <summary>Category, title and link</summary>
+        <div class="stack">
+          {{template "fields" $.Panel}}
+          <label>Title
+            <input type="text" name="title" value="{{.Title}}">
+          </label>
+          <label>Link <span class="hint">optional</span>
+            <input type="text" name="url" value="{{.URL}}">
+          </label>
+        </div>
+      </details>
+
+      <div class="panel-save">
+        <button type="submit" class="primary">Save</button>
+        <span class="saved-note" hidden>Saved</span>
+      </div>
+    </form>
+
+    <details class="danger">
+      <summary>Delete this item</summary>
+      <p class="hint">This removes the item and its notes permanently.</p>
+      <form action="/items/{{.ID}}/delete" method="post">
+        <input type="hidden" name="return" value="{{$.ListReturn}}">
+        <button type="submit" class="destructive">Yes, delete this item</button>
+      </form>
+    </details>
+  </div>
+</aside>
+{{end}}
+{{end}}

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>{{template "head" .}}</head>
+<body>
+<header class="site-header">
+ <div class="header-inner">
+  <a class="brand" href="/">Catalogue</a>
+  <div class="signed-in">
+    <span class="who">{{.User.Email}}</span>
+    <form action="/logout" method="post"><button type="submit">Sign out</button></form>
+  </div>
+ </div>
+</header>
+
+<main class="layout single">
+  <section class="content">
+    <p><a href="/">Back to the catalogue</a></p>
+
+    <div class="card stack">
+      <h1>Account</h1>
+      <p class="meta">Signed in as <span class="creator">{{.User.Email}}</span> · joined {{date .User.CreatedAt}}</p>
+    </div>
+
+    <div class="card stack">
+      <h2>Public lists</h2>
+      <p class="hint">Share chosen items with anyone through a link, from <a href="/lists">the lists page</a>.</p>
+    </div>
+
+    <form class="card stack" action="/account/password" method="post">
+      <h2>Change password</h2>
+      {{template "error" .Error}}
+      {{if .Changed}}<p class="ok" role="status">Password changed. Any other signed-in device has been signed out.</p>{{end}}
+      <label>Current password
+        <input type="password" name="current" autocomplete="current-password" required>
+      </label>
+      <label>New password <span class="hint">at least 10 characters</span>
+        <input type="password" name="new" autocomplete="new-password" minlength="10" required>
+      </label>
+      <label>Repeat new password
+        <input type="password" name="repeat" autocomplete="new-password" minlength="10" required>
+      </label>
+      <div class="row">
+        <button type="submit" class="primary">Change password</button>
+      </div>
+    </form>
+  </section>
+</main>
+</body>
+</html>

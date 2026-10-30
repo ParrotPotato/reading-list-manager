@@ -1,0 +1,7 @@
+# An allowlist, so a database or a stray secret can never end up in the image.
+*
+!*.go
+!go.mod
+!go.sum
+!static
+!templates

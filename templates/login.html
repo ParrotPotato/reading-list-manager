@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>{{template "head" .}}</head>
+<body class="login-page">
+<main class="login">
+  <form class="card stack" action="/login" method="post">
+    <h1>Catalogue</h1>
+    <p class="hint">Sign in to reach your catalogue.</p>
+    {{template "error" .Error}}
+    <input type="hidden" name="next" value="{{.Next}}">
+    <label>Email
+      <input type="email" name="email" value="{{.Email}}" autocomplete="username" autofocus required>
+    </label>
+    <label>Password
+      <input type="password" name="password" autocomplete="current-password" required>
+    </label>
+    <button type="submit" class="primary">Sign in</button>
+    <p class="hint">Accounts are created from the command line; there is no sign-up.</p>
+  </form>
+</main>
+</body>
+</html>
