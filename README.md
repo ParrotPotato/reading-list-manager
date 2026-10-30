@@ -217,6 +217,31 @@ reloads and your scroll position survives. With JavaScript off, every link and
 button is an ordinary link and form post and the app behaves identically, just
 with full page loads.
 
+## The fun parts
+
+`static/fx.js` is decoration on top of all that. No handler in it prevents a
+default, stops an event or delays a request, so it can never cost anyone a click.
+
+- **Clicks burst.** Lines shoot out from the pointer, in the colour of the item's
+  category, drawn on one canvas that only runs while something is flying. Stars,
+  saves, deletes and finishing something each get their own effect, and rapid
+  clicks climb in pitch and size.
+- **Sound is synthesised** with Web Audio, so there are no files to embed: a
+  *plick* on press and a *plock* on release. The ♪ in the header turns it off and
+  the browser remembers. Hovering is silent on purpose. The sounds are all in the
+  `sounds` table, if you want to retune them.
+- **The page holds still unless something changed.** `app.js` replaces `#main` and
+  the panel on every click, so it announces each swap and `fx.js` compares before
+  and after: a card that stayed does not replay its entrance, one that moved
+  glides, a new one deals in and a removed one fades.
+- **The bar in the Queue box** shows how much is done, and rains confetti when you
+  finish the lot.
+- **`prefers-reduced-motion` turns all the motion off.** The sound keeps its own
+  switch, because it is not motion.
+
+The public page sends no script at all, so it only gets what CSS can do: the
+category pieces, the entrances and the hover reactions.
+
 ## Layout
 
 | File | What's in it |
@@ -234,6 +259,7 @@ with full page loads.
 | `templates/` | `index.html`, the `panel.html` drawer, `lists.html`, the public `public.html`, `login.html`, shared partials |
 | `static/style.css` | All the styling, with a dark mode |
 | `static/app.js` | Progressive enhancement, ~150 lines |
+| `static/fx.js` | Click bursts, sound and the animation of region swaps |
 | `Dockerfile`, `compose.yaml` | The container image, and running it with `sqlite/` mounted |
 
 ## Notes on the storage

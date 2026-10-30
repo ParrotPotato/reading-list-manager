@@ -6,9 +6,11 @@
 
   var REGIONS = ["main", "panel-host", "all-tags"];
 
-  function panelOpen() { return !!document.querySelector(".panel"); }
+  // Scoped to the host, because fx.js keeps a closed panel on screen elsewhere
+  // for a moment while it slides away, and that one is not open.
+  function panelOpen() { return !!document.querySelector("#panel-host .panel"); }
 
-  function panelForm() { return document.querySelector(".panel-form"); }
+  function panelForm() { return document.querySelector("#panel-host .panel-form"); }
 
   // dirty reports whether the panel has edits that are not saved yet. The DOM
   // keeps the server-rendered value in defaultValue, so nothing to track.
@@ -28,6 +30,7 @@
       window.location.href = url;
       return false;
     }
+    document.dispatchEvent(new CustomEvent("catalogue:swapping"));
     REGIONS.forEach(function (id) {
       var fresh = doc.getElementById(id);
       var current = document.getElementById(id);
@@ -38,6 +41,7 @@
 
     if (push) history.pushState({}, "", url);
     else history.replaceState({}, "", url);
+    document.dispatchEvent(new CustomEvent("catalogue:swapped"));
     return true;
   }
 
@@ -77,7 +81,7 @@
   }
 
   function flashSaved() {
-    var note = document.querySelector(".panel-form .saved-note");
+    var note = document.querySelector("#panel-host .saved-note");
     if (!note) return;
     note.hidden = false;
     setTimeout(function () { note.hidden = true; }, 1800);
@@ -94,7 +98,7 @@
   }
 
   function focusPanel() {
-    var heading = document.querySelector(".panel h2");
+    var heading = document.querySelector("#panel-host .panel h2");
     if (!heading) return;
     heading.setAttribute("tabindex", "-1");
     heading.focus({ preventScroll: true });
@@ -143,7 +147,7 @@
 
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape" && panelOpen()) {
-      var close = document.querySelector(".panel-close");
+      var close = document.querySelector("#panel-host .panel-close");
       if (close) leave(close.getAttribute("href"));
     }
     // Cmd/Ctrl+Enter saves the notes you are typing.

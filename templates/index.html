@@ -8,7 +8,7 @@
   <form class="search" action="/" method="get" role="search">
     {{template "carry" .Filter}}
     {{if not .Filter.SortIsDefault}}<input type="hidden" name="sort" value="{{.Filter.Sort}}">{{end}}
-    <input type="search" name="q" value="{{.Filter.Query}}" placeholder="Search titles, people, links and notes…" aria-label="Search">
+    <input type="search" name="q" value="{{.Filter.Query}}" placeholder="Rummage the shelves…" aria-label="Search">
     <button type="submit">Search</button>
   </form>
   <div class="signed-in">
@@ -25,7 +25,7 @@
     {{if not .Panel}}{{template "error" .Error}}{{end}}
 
     <details class="card add" {{if and .Error (not .Panel)}}open{{end}}>
-      <summary>Save something</summary>
+      <summary>Found a treasure? Stash it here</summary>
       <form action="/items" method="post" class="stack">
         <input type="hidden" name="return" value="{{.Return}}">
         <label>Link <span class="hint">optional — books and films often have none</span>
@@ -42,7 +42,7 @@
           <textarea name="notes" rows="3"></textarea>
         </label>
         <div class="row">
-          <button type="submit" class="primary">Save to catalogue</button>
+          <button type="submit" class="primary">Stash it</button>
         </div>
       </form>
     </details>
@@ -57,7 +57,7 @@
         {{else if .Filter.Query}}Results
         {{else}}Everything{{end}}
       </h1>
-      <span class="count">{{len .Items}} item{{if ne (len .Items) 1}}s{{end}}</span>
+      <span class="count">{{len .Items}} treasure{{if ne (len .Items) 1}}s{{end}}</span>
       {{if .Filter.Active}}<a class="clear" href="/" data-swap>Clear filters</a>{{end}}
       <form class="sort" action="/" method="get">
         {{template "carry" .Filter}}
@@ -74,13 +74,13 @@
 
     {{if not .Items}}
       <p class="empty">
-        {{if .Filter.Active}}Nothing matches this filter.{{else}}Nothing here yet — add the first thing you want to get to.{{end}}
+        {{if .Filter.Active}}Nothing turned up. Even the dust bunnies had a look.{{else}}The shelves are bare. Stash the first thing you want to get to.{{end}}
       </p>
     {{end}}
 
     <ul class="items">
       {{range .Items}}
-      <li class="card item kind-{{.Kind}} {{if .Favorite}}starred{{end}} {{if and $.Panel (eq .ID $.Panel.ID)}}active{{end}}">
+      <li class="card item kind-{{.Kind}} {{if .Favorite}}starred{{end}} {{if and $.Panel (eq .ID $.Panel.ID)}}active{{end}}" data-item="{{.ID}}">
         <div class="item-main">
           <h2>
             {{if .URL}}<a href="{{.URL}}" target="_blank" rel="noopener noreferrer">{{.Title}}</a>
@@ -115,6 +115,11 @@
         {{end}}
         <li><a href="/?favorite=1" class="{{if .Filter.Favorite}}on{{end}}" data-swap>Starred <span>{{.Counts.Favorites}}</span></a></li>
       </ul>
+      {{if .Counts.Total}}
+      {{$done := index .Counts.Statuses "done"}}
+      <div class="xp" role="img" aria-label="{{$done}} of {{.Counts.Total}} done" data-done="{{$done}}" data-total="{{.Counts.Total}}" style="--done: {{$done}}; --total: {{.Counts.Total}}"><div class="xp-fill"></div></div>
+      <p class="hint xp-note">{{if eq $done .Counts.Total}}All done. Time to go treasure hunting!{{else}}{{$done}} of {{.Counts.Total}} done{{end}}</p>
+      {{end}}
     </nav>
 
     <nav class="card">
@@ -163,5 +168,6 @@
 
 <datalist id="all-tags">{{range .Tags}}<option value="{{.Name}}">{{end}}</datalist>
 <script src="/static/app.js" defer></script>
+<script src="/static/fx.js" defer></script>
 </body>
 </html>

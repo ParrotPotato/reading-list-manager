@@ -5,7 +5,7 @@
 <main class="login">
   <form class="card stack" action="/login" method="post">
     <h1>Catalogue</h1>
-    <p class="hint">Sign in to reach your catalogue.</p>
+    <p class="hint">Knock knock. Sign in to reach your shelves.</p>
     {{template "error" .Error}}
     <input type="hidden" name="next" value="{{.Next}}">
     <label>Email
@@ -18,5 +18,6 @@
     <p class="hint">Accounts are created from the command line; there is no sign-up.</p>
   </form>
 </main>
+<script src="/static/fx.js" defer></script>
 </body>
 </html>
